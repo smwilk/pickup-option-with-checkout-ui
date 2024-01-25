@@ -1,0 +1,27 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+name = "pickup-option"
+client_id = "4059b6bf49402cbd7036a3dc75f1ddc0"
+application_url = "https://yukon-speed-insulin-wheat.trycloudflare.com"
+embedded = true
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_customers, write_customers, write_products"
+
+[auth]
+redirect_urls = [
+  "https://yukon-speed-insulin-wheat.trycloudflare.com/auth/callback",
+  "https://yukon-speed-insulin-wheat.trycloudflare.com/auth/shopify/callback",
+  "https://yukon-speed-insulin-wheat.trycloudflare.com/api/auth/callback"
+]
+
+[webhooks]
+api_version = "2024-01"
+
+[pos]
+embedded = false
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "checkout-extension-test-store2.myshopify.com"
