@@ -10,13 +10,17 @@ import {
   InlineStack,
   useAttributes,
   useShippingAddress,
-  useApplyShippingAddressChange
+  useApplyShippingAddressChange,
+  useExtensionCapability,
+  useBuyerJourneyIntercept,
 } from '@shopify/ui-extensions-react/checkout';
 
 export default reactExtension('purchase.checkout.block.render', () => <Extension />);
 
 function Extension() {
+  const canBlockProgress = useExtensionCapability("block_progress");
   const shippingAddress = useShippingAddress();
+  console.log("shipping address", shippingAddress.city)
   const applyShippingAddressChange = useApplyShippingAddressChange();
   const getAttribute = useAttributes();
   const [selectedBranch, setSelectedBranch] = useState(getAttribute?.[0]?.value);
@@ -24,6 +28,35 @@ function Extension() {
   const [selectedValue, setSelectedValue] = useState("ship");
   console.log({ shippingAddress })
   console.log("updateAddress", applyShippingAddressChange)
+
+  useBuyerJourneyIntercept(({ canBlockProgress }) => {
+    if (canBlockProgress && !doesShippingAddressMatchSelectedBranch()) {
+      return {
+        behavior: "block",
+        reason: "You selected a pickup option but updated the address",
+        perform: (result) => {
+          // If progress can be blocked, then set a validation error on the custom field
+          if (result.behavior === "block") {
+            setValidationError("Do not update address");
+          }
+        },
+      };
+    }
+
+    return {
+      behavior: "allow",
+      perform: () => {
+        // Clear any validation errors
+        setValidationError("");
+      },
+    };
+  });
+
+  function doesShippingAddressMatchSelectedBranch() {
+    if (shippingAddress.city !== selectedBranch) {
+      return true
+    }
+  }
 
   async function updateAddress() {
     // Define addresses for branches
