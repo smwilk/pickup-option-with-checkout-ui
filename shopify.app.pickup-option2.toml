@@ -2,7 +2,7 @@
 
 name = "pickup-option"
 client_id = "b8c8c3462d759b9b840715d8c9b9a87d"
-application_url = "https://fell-owen-player-way.trycloudflare.com"
+application_url = "https://latinas-lazy-construction-gel.trycloudflare.com"
 embedded = true
 
 [access_scopes]
@@ -11,9 +11,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://fell-owen-player-way.trycloudflare.com/auth/callback",
-  "https://fell-owen-player-way.trycloudflare.com/auth/shopify/callback",
-  "https://fell-owen-player-way.trycloudflare.com/api/auth/callback"
+  "https://latinas-lazy-construction-gel.trycloudflare.com/auth/callback",
+  "https://latinas-lazy-construction-gel.trycloudflare.com/auth/shopify/callback",
+  "https://latinas-lazy-construction-gel.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

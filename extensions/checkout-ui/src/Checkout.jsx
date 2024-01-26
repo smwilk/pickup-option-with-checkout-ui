@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-
 import {
   reactExtension,
   BlockStack,
@@ -13,29 +12,37 @@ import {
   useApplyShippingAddressChange,
   useExtensionCapability,
   useBuyerJourneyIntercept,
+  Button
 } from '@shopify/ui-extensions-react/checkout';
 
 export default reactExtension('purchase.checkout.block.render', () => <Extension />);
 
 function Extension() {
+  const [isErrorMessageDisplayed, setIsErrorMessageDisplayed] = useState(false);
+  const [validationError, setValidationError] = useState("");
   const canBlockProgress = useExtensionCapability("block_progress");
   const shippingAddress = useShippingAddress();
-  console.log("shipping address", shippingAddress.city)
   const applyShippingAddressChange = useApplyShippingAddressChange();
   const getAttribute = useAttributes();
   const [selectedBranch, setSelectedBranch] = useState(getAttribute?.[0]?.value);
-  console.log("selectedBranch:", selectedBranch);
   const [selectedValue, setSelectedValue] = useState("ship");
-  console.log({ shippingAddress })
-  console.log("updateAddress", applyShippingAddressChange)
 
-  useBuyerJourneyIntercept(({ canBlockProgress }) => {
-    if (canBlockProgress && !doesShippingAddressMatchSelectedBranch()) {
+  function doesShippingAddressMatchSelectedBranch() {
+    return shippingAddress.city === selectedBranch;
+  }
+
+  useBuyerJourneyIntercept(() => {
+    if (selectedBranch && canBlockProgress && !doesShippingAddressMatchSelectedBranch()) {
+      setIsErrorMessageDisplayed(true);
       return {
         behavior: "block",
         reason: "You selected a pickup option but updated the address",
+        errors: [
+          {
+            message: `You have selected ${selectedBranch} for the pickup location. Please do not update the shipping address.`,
+          },
+        ],
         perform: (result) => {
-          // If progress can be blocked, then set a validation error on the custom field
           if (result.behavior === "block") {
             setValidationError("Do not update address");
           }
@@ -46,58 +53,41 @@ function Extension() {
     return {
       behavior: "allow",
       perform: () => {
-        // Clear any validation errors
         setValidationError("");
       },
     };
   });
 
-  function doesShippingAddressMatchSelectedBranch() {
-    if (shippingAddress.city !== selectedBranch) {
-      return true
-    }
-  }
-
   async function updateAddress() {
-    // Define addresses for branches
-    const yokohama = {
-      address1: "Miyagaya, Nishi",
-      city: "Yokohama",
-      countryCode: "JP",
-      provinceCode: "Kanagawa",
-      postalCode: "2200000"
-    }
+    const addresses = {
+      Yokohama: {
+        address1: "Miyagaya, Nishi",
+        city: "Yokohama",
+        countryCode: "JP",
+        provinceCode: "Kanagawa",
+        postalCode: "2200000"
+      },
+      Akasaka: {
+        address1: "Akasaka",
+        city: "Minato",
+        countryCode: "JP",
+        provinceCode: "Tokyo",
+        postalCode: "1078332"
+      },
+      Shinagawa: {
+        address1: "Kitashinagawa",
+        city: "Shinagawa",
+        countryCode: "JP",
+        provinceCode: "Tokyo",
+        postalCode: "1098792"
+      }
+    };
 
-    const akasaka = {
-      address1: "Akasaka",
-      city: "Minato",
-      countryCode: "JP",
-      provinceCode: "Tokyo",
-      postalCode: "1078332"
-    }
-
-    const shinagawa = {
-      address1: "Kitashinagawa",
-      city: "Shinagawa",
-      countryCode: "JP",
-      provinceCode: "Tokyo",
-      postalCode: "1098792"
-    }
-
-    // Default to Akasaka
-    let address = akasaka
-    if (selectedBranch === "Yokohama") {
-      address = yokohama
-    } else if (selectedBranch === "Shinagawa") {
-      address = shinagawa
-    }
+    const address = addresses[selectedBranch] || addresses.Akasaka;
     const result = await applyShippingAddressChange({
       type: "updateShippingAddress",
       address: address
     });
-
-
-    console.log("updated address result:", result);
   }
 
   return (
@@ -131,6 +121,11 @@ function Extension() {
         <Banner status="warning">
           Your shipping address is prefilled with the {selectedBranch} location address. Please do not change the shipping address.
         </Banner>
+      )}
+      {isErrorMessageDisplayed && (
+        <Button onPress={updateAddress}>
+          Apply branch address
+        </Button>
       )}
     </InlineStack>
   );
